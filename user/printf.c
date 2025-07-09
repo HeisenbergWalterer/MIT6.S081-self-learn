@@ -104,7 +104,7 @@ fprintf(int fd, const char *fmt, ...)
 }
 
 void
-printf(const char *fmt, ...)
+printf(const char *fmt, ...) // 向标准输出（shell）输出字符串
 {
   va_list ap;
 

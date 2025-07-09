@@ -4,36 +4,36 @@
 #include "user/user.h"
 
 char*
-strcpy(char *s, const char *t)
+strcpy(char *s, const char *t) // 将字符串t复制到s中
 {
   char *os;
 
   os = s;
-  while((*s++ = *t++) != 0)
+  while((*s++ = *t++) != 0) // 逐字符复制，直至出现\0
     ;
   return os;
 }
 
 int
-strcmp(const char *p, const char *q)
+strcmp(const char *p, const char *q) // 字符串比较
 {
-  while(*p && *p == *q)
+  while(*p && *p == *q) // 字符串相同且不为\0
     p++, q++;
-  return (uchar)*p - (uchar)*q;
+  return (uchar)*p - (uchar)*q; // 返回值取决于字符长度
 }
 
 uint
-strlen(const char *s)
+strlen(const char *s) // 计算字符串长度
 {
   int n;
 
-  for(n = 0; s[n]; n++)
+  for(n = 0; s[n]; n++) // 遇见\0停止
     ;
   return n;
 }
 
 void*
-memset(void *dst, int c, uint n)
+memset(void *dst, int c, uint n) // 把dst位置前n个赋值为c
 {
   char *cdst = (char *) dst;
   int i;
