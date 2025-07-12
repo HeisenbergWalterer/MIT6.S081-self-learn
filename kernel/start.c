@@ -7,6 +7,16 @@
 void main();
 void timerinit();
 
+/* 
+1. entry.S → start() 函数（机器模式）
+2. 设置各种系统寄存器和中断委托
+3. 初始化定时器中断机制
+4. mret 切换到管理/监督者模式 → main() 函数
+
+RISC-V的特权级别：机器模式、监督者模式/管理模式、用户模式
+从内存划分的角度：
+*/
+
 // entry.S needs one stack per CPU.
 __attribute__ ((aligned (16))) char stack0[4096 * NCPU];
 
