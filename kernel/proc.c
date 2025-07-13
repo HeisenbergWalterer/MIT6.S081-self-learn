@@ -8,6 +8,7 @@
 
 struct cpu cpus[NCPU];
 
+// 进程表
 struct proc proc[NPROC];
 
 struct proc *initproc;
@@ -21,7 +22,7 @@ static void freeproc(struct proc *p);
 
 extern char trampoline[]; // trampoline.S
 
-// initialize the proc table at boot time.
+// 在boot时初始化 proc 表。
 void
 procinit(void)
 {
@@ -63,7 +64,7 @@ mycpu(void) {
   return c;
 }
 
-// Return the current struct proc *, or zero if none.
+// 返回当前 struct proc *，如果没有，则返回零。
 struct proc*
 myproc(void) {
   push_off();
@@ -85,10 +86,10 @@ allocpid() {
   return pid;
 }
 
-// Look in the process table for an UNUSED proc.
-// If found, initialize state required to run in the kernel,
-// and return with p->lock held.
-// If there are no free procs, or a memory allocation fails, return 0.
+// 在进程表中查找 UNUSED 进程。
+// 如果找到，则初始化在内核中运行所需的状态，
+// 并按住 p->lock 返回。
+// 如果没有空闲进程，或者内存分配失败，则返回 0。
 static struct proc*
 allocproc(void)
 {
@@ -128,6 +129,22 @@ found:
   p->context.sp = p->kstack + PGSIZE;
 
   return p;
+}
+
+// 获取非UNUSED进程数
+uint64 getNproc(void) {
+  struct proc *p;
+  uint64 nproc = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if(p->state != UNUSED) {
+      nproc++;
+    }
+    release(&p->lock);
+  }
+
+  return nproc;
 }
 
 // free a proc structure and the data hanging from it,
@@ -259,15 +276,15 @@ int
 fork(void)
 {
   int i, pid;
-  struct proc *np;
-  struct proc *p = myproc();
+  struct proc *np;           // 子进程
+  struct proc *p = myproc(); // 当前进程
 
-  // Allocate process.
+  // 分配进程。
   if((np = allocproc()) == 0){
     return -1;
   }
 
-  // Copy user memory from parent to child.
+  // 将用户内存从父级复制到子级。
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
     release(&np->lock);
@@ -275,29 +292,32 @@ fork(void)
   }
   np->sz = p->sz;
 
+  // 设置父子关系
   np->parent = p;
 
-  // copy saved user registers.
+  // 复制父进程的所有用户寄存器状态
   *(np->trapframe) = *(p->trapframe);
 
-  // Cause fork to return 0 in the child.
+  // 使 fork 在子对象中返回 0。
   np->trapframe->a0 = 0;
 
-  // increment reference counts on open file descriptors.
+  // 复制trace_mask
+  np->trace_mask = p->trace_mask;
+
+  // 复制文件描述符
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);
   np->cwd = idup(p->cwd);
 
-  safestrcpy(np->name, p->name, sizeof(p->name));
+  safestrcpy(np->name, p->name, sizeof(p->name)); // 子进程继承父进程的名字
 
+  // 启动子进程
   pid = np->pid;
-
   np->state = RUNNABLE;
-
   release(&np->lock);
 
-  return pid;
+  return pid; // 在父进程中返回子进程PID
 }
 
 // Pass p's abandoned children to init.

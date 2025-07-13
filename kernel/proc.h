@@ -47,6 +47,8 @@ struct trapframe {
   /*  16 */ uint64 kernel_trap;   // usertrap()
   /*  24 */ uint64 epc;           // saved user program counter
   /*  32 */ uint64 kernel_hartid; // saved kernel tp
+
+  // 用户态的所有寄存器
   /*  40 */ uint64 ra;
   /*  48 */ uint64 sp;
   /*  56 */ uint64 gp;
@@ -82,15 +84,15 @@ struct trapframe {
 
 enum procstate { UNUSED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
-// Per-process state
+// Per-process state 进程控制块（PCB）
 struct proc {
   struct spinlock lock;
 
   // p->lock must be held when using these:
-  enum procstate state;        // Process state
-  struct proc *parent;         // Parent process
-  void *chan;                  // If non-zero, sleeping on chan
-  int killed;                  // If non-zero, have been killed
+  enum procstate state;        // 进程状态
+  struct proc *parent;         // 父进程
+  void *chan;                  // 如果非零，则 sleeping on chan
+  int killed;                  // 如果非零，则 has been killed
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
 
@@ -103,4 +105,7 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  // 用于trace函数
+  int trace_mask;
 };

@@ -1,4 +1,4 @@
-// Physical memory allocator, for user processes,
+// 物理内存分配器
 // kernel stacks, page-table pages,
 // and pipe buffers. Allocates whole 4096-byte pages.
 
@@ -11,16 +11,18 @@
 
 void freerange(void *pa_start, void *pa_end);
 
-extern char end[]; // first address after kernel.
-                   // defined by kernel.ld.
+// kernel 之后的第一个地址。
+// 由 kernel.ld 定义。
+extern char end[]; 
 
+// 空闲页面节点
 struct run {
   struct run *next;
 };
 
 struct {
   struct spinlock lock;
-  struct run *freelist;
+  struct run *freelist; // 空闲页面链表的头指针
 } kmem;
 
 void
@@ -79,4 +81,20 @@ kalloc(void)
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+uint64 getFreeMem(void) {
+  struct run *r;
+  uint64 num = 0;
+
+  // 注意加锁保护
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  while(r) {
+    num++;
+    r = r->next;
+  }
+  release(&kmem.lock);
+
+  return num * 4096;
 }

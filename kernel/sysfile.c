@@ -1,5 +1,5 @@
 //
-// File-system system calls.
+// 所有与文件系统操作相关的系统调用
 // Mostly argument checking, since we don't trust
 // user code, and calls into file.c and fs.c.
 //
@@ -18,15 +18,17 @@
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
+// 从系统调用参数中获取文件描述符
 static int
 argfd(int n, int *pfd, struct file **pf)
 {
   int fd;
   struct file *f;
 
+  // 从n号寄存器获取文件描述符号
   if(argint(n, &fd) < 0)
     return -1;
-  if(fd < 0 || fd >= NOFILE || (f=myproc()->ofile[fd]) == 0)
+  if(fd < 0 || fd >= NOFILE || (f=myproc()->ofile[fd]) == 0) // 验证文件描述符有效性
     return -1;
   if(pfd)
     *pfd = fd;
@@ -108,7 +110,7 @@ uint64
 sys_fstat(void)
 {
   struct file *f;
-  uint64 st; // user pointer to struct stat
+  uint64 st; // 指向 struct stat 的 user 指针
 
   if(argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)
     return -1;
